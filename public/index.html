@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Board</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+        }
+        h1 {
+            text-align: center;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ccc;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Message Board</h1>
+    <form id="messageForm">
+        <input type="text" id="messageInput" placeholder="Enter your message" required>
+        <button type="submit">Add Message</button>
+    </form>
+    <ul id="messageList"></ul>
+
+    <script>
+        const messageForm = document.getElementById('messageForm');
+        const messageInput = document.getElementById('messageInput');
+        const messageList = document.getElementById('messageList');
+
+        // Fetch and display messages
+        async function loadMessages() {
+            const response = await fetch('/messages');
+            const messages = await response.json();
+            messageList.innerHTML = '';
+            messages.forEach(message => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <p>${message.text}</p>
+                    <button onclick="deleteMessage('${message.id}')">Delete</button>
+                `;
+                messageList.appendChild(li);
+            });
+        }
+
+        // Add new message
+        messageForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = messageInput.value;
+            if (text.trim()) {
+                await fetch('/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text }),
+                });
+                messageInput.value = '';
+                loadMessages();
+            }
+        });
+
+        // Delete a message
+        async function deleteMessage(id) {
+            await fetch(`/messages/${id}`, {
+                method: 'DELETE',
+            });
+            loadMessages();
+        }
+
+        // Initial load
+        loadMessages();
+    </script>
+</body>
+</html>
